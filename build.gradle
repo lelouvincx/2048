@@ -36,7 +36,7 @@ dependencies {
 
 application {
     // Define the main class for the application
-    getMainClass().set('minesweeper.App')
+    getMainClass().set('TwentyFortyEight.App')
 }
 
 test {
@@ -48,7 +48,7 @@ test {
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
-        attributes 'Main-Class': 'minesweeper.App'
+        attributes 'Main-Class': 'TwentyFortyEight.App'
     }
     from {
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
