@@ -10,7 +10,9 @@ public class Cell {
         this.x = x;
         this.y = y;
     }
-
+    public int getValue(){
+        return value;
+    }
     public void place() {
         if (this.value == 0) {
             this.value = (App.random.nextInt(2)+1)*2;
@@ -23,17 +25,17 @@ public class Cell {
     public void draw(App app) {
         app.stroke(156, 139, 124);
             if (app.mouseX > x*App.CELLSIZE && app.mouseX < (x+1)*App.CELLSIZE 
-                && app.mouseY > y*App.CELLSIZE && app.mouseY < (y+1)*App.CELLSIZE) {
+                && app.mouseY > y*App.CELLSIZE+App.TOP_SIZE && app.mouseY < (y+1)*App.CELLSIZE+App.TOP_SIZE) {
                 app.fill(232, 207, 184);
             } else if (this.value == 2) {
-                app.image(app.eight, x*App.CELLSIZE, y*App.CELLSIZE, App.CELLSIZE, App.CELLSIZE);
+                app.image(app.eight, x*App.CELLSIZE, y*App.CELLSIZE+App.TOP_SIZE, App.CELLSIZE, App.CELLSIZE);
             } else {
                 app.fill(189, 172, 151);
             }
-        app.rect(x*App.CELLSIZE, y*App.CELLSIZE, App.CELLSIZE, App.CELLSIZE);
+        app.rect(x*App.CELLSIZE, y*App.CELLSIZE+ App.TOP_SIZE, App.CELLSIZE, App.CELLSIZE);
         if (this.value > 0) {
             app.fill(0,0,0);
-            app.text(String.valueOf(this.value), (x+0.4f)*App.CELLSIZE, (y+0.6f)*App.CELLSIZE);
+            app.text(String.valueOf(this.value), (x+0.4f)*App.CELLSIZE, (y+0.6f)*App.CELLSIZE+App.TOP_SIZE);
         }
     }
 

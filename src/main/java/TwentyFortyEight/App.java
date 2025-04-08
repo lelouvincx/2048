@@ -25,9 +25,10 @@ public class App extends PApplet {
     public static final int WIDTH = GRID_SIZE * CELLSIZE;
     public static final int HEIGHT = GRID_SIZE * CELLSIZE;
     public static final int FPS = 30;
+    public static final int TOP_SIZE=200;
 
     private Cell[][] board;
-
+    private Score score;
     public static Random random = new Random();
 
     private PFont font;
@@ -38,6 +39,8 @@ public class App extends PApplet {
 
     public App() {
         this.board = new Cell[4][4];
+        this.score=new Score(0);
+
     }
 
     /**
@@ -45,7 +48,7 @@ public class App extends PApplet {
      */
     @Override
     public void settings() {
-        size(WIDTH, HEIGHT);
+        size(WIDTH, HEIGHT+TOP_SIZE);
     }
 
     /**
@@ -66,6 +69,7 @@ public class App extends PApplet {
                 board[i][i2] = new Cell(i2, i);
             }
         }
+        
     }
 
     /**
@@ -87,8 +91,9 @@ public class App extends PApplet {
     @Override
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == PConstants.LEFT) {
-            Cell current = board[e.getY()/App.CELLSIZE][e.getX()/App.CELLSIZE];
+            Cell current = board[(e.getY()-App.TOP_SIZE)/App.CELLSIZE][e.getX()/App.CELLSIZE];
             current.place();
+            this.score.addScore(current.getValue());
         }
     }
 
@@ -111,6 +116,9 @@ public class App extends PApplet {
                 board[i][i2].draw(this);
             }
         }
+
+        this.score.draw(this);
+
     }
 
     public static void main(String[] args) {
