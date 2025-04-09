@@ -30,3 +30,51 @@ The game is played by moving tiles with the arrow keys. The goal is to create a 
 Press 'r' to restart the game.
 
 Left click on a tile to spawn a new tile.
+
+## Design
+
+The game is designed to be simple and easy to understand.
+
+```mermaid
+classDiagram
+    class App {
+        +draw
+    }
+    class Tile {
+        -int x
+        -int y
+        -int value
+        -int prevX
+        -int prevY
+        -Tile[] mergedFrom
+        -boolean isNew
+        -boolean isMerged
+
+        +savePosition()
+        +updatePosition(x, y)
+        +draw()
+    }
+    class Vector {
+        -int x
+        -int y
+
+        +getX()
+        +getY()
+    }
+    class Board {
+        -int size
+        +Tile[][] tiles
+
+        +ramdomAvailableTile()
+        +availableTiles()
+        +tileAvailable(x, y)
+        +insertTile(tile)
+        +removeTile(tile)
+        +withinBounds(x, y)
+        +getSize()
+        +addRandomTile()
+        +addTileAt(x, y)
+        +moveTile(tile, toX, toY)
+        +draw(app)
+    }
+```
