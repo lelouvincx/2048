@@ -54,3 +54,12 @@ jar {
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
     }
 }
+
+// In your build.gradle file
+tasks.withType(JavaExec) {
+    jvmArgs += [
+        '-Djava.awt.headless=true',
+        '-XX:+IgnoreUnrecognizedVMOptions',
+        '--add-opens=java.desktop/com.apple.eawt=ALL-UNNAMED'
+    ]
+}

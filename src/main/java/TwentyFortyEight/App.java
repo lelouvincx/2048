@@ -1,7 +1,8 @@
 package TwentyFortyEight;
 
-import org.checkerframework.checker.units.qual.A;
 import processing.core.PApplet;
+import processing.core.PConstants;
+import processing.core.PFont;
 import processing.core.PImage;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
@@ -17,82 +18,110 @@ import java.util.*;
 
 public class App extends PApplet {
 
-  public static final int GRID_SIZE = 4; // 4x4 grid
-  public static final int CELLSIZE = 100; // Cell size in pixels
-  public static final int CELL_BUFFER = 8; // Space between cells
-  public static final int WIDTH = GRID_SIZE * CELLSIZE;
-  public static final int HEIGHT = GRID_SIZE * CELLSIZE;
-  public static final int FPS = 30;
+    public static final int GRID_SIZE = 4; // 4x4 grid
+    public static final int CELLSIZE = 100; // Cell size in pixels
+    public static final int CELL_BUFFER = 8; // Space between cells
+    public static final int WIDTH = GRID_SIZE * CELLSIZE;
+    public static final int HEIGHT = GRID_SIZE * CELLSIZE;
+    public static final int FPS = 30;
+    public static final int TOP_SIZE = 200;
 
-  private Game game;
-  public static Random random = new Random();
+    private Board board;
+    private Score score;
+    private boolean won = false;
+    private boolean over = false;
+    private boolean keepPlaying = false;
+    private int numStartTiles = 2;
+    public static Random random = new Random();
 
-  // Feel free to add any additional methods or attributes you want. Please put
-  // classes in different files.
+    private PFont font;
 
-  public App() {
-    // this.configPath = "config.json";
-  }
+    // Feel free to add any additional methods or attributes you want. Please put
+    // classes in different files.
 
-  /**
-   * Initialise the setting of the window size.
-   */
-  @Override
-  public void settings() {
-    size(WIDTH, HEIGHT);
-  }
+    public App() { }
 
-  /**
-   * Load all resources such as images. Initialise the elements such as the player
-   * and map elements.
-   */
-  @Override
-  public void setup() {
-    frameRate(FPS);
-    // See PApplet javadoc:
-    // loadJSONObject(configPath)
-    // loadImage(this.getClass().getResource(filename).getPath().toLowerCase(Locale.ROOT).replace("%20",
-    // " "));
+    /**
+     * Initialise the setting of the window size.
+     */
+    @Override
+    public void settings() {
+        size(WIDTH, HEIGHT + TOP_SIZE);
+    }
 
-    // create attributes for data storage, eg board
-  }
+    /**
+     * Load all resources such as images. Initialise the elements such as the player
+     * and map elements.
+     */
+    @Override
+    public void setup() {
+        // frameRate(FPS);
+        // See PApplet javadoc:
+        // loadJSONObject(configPath)
+        // loadImage(this.getClass().getResource(filename).getPath().toLowerCase(Locale.ROOT).replace("%20",
+        // " "));
+        textAlign(CENTER, CENTER);
+        rectMode(CENTER);
+        this.board = new Board(4);
+        this.score = new Score(0);
+        this.won = false;
+        this.over = false;
+        this.keepPlaying = false;
 
-  /**
-   * Receive key pressed signal from the keyboard.
-   */
-  @Override
-  public void keyPressed(KeyEvent event) {
+        // Initial 2 start tiles
+        for (int i = 0; i < 2; i++) {
+            this.board.addRandomTile();
+        }
+    }
 
-  }
 
-  /**
-   * Receive key released signal from the keyboard.
-   */
-  @Override
-  public void keyReleased() {
+    /**
+     * Receive key pressed signal from the keyboard.
+     */
+    @Override
+    public void keyPressed(KeyEvent event) {
 
-  }
+    }
 
-  @Override
-  public void mousePressed(MouseEvent e) {
+    /**
+     * Receive key released signal from the keyboard.
+     */
+    @Override
+    public void keyReleased() {
 
-  }
+    }
 
-  @Override
-  public void mouseReleased(MouseEvent e) {
+    @Override
+    public void mousePressed(MouseEvent e) {
 
-  }
+    }
 
-  /**
-   * Draw all elements in the game by current frame.
-   */
-  @Override
-  public void draw() {
-    // draw game board
-    background(250, 248, 239);
-  }
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (e.getButton() == PConstants.LEFT) {
+            this.board.addTileAt((e.getY() - App.TOP_SIZE) / App.CELLSIZE, e.getX() / App.CELLSIZE);
+        }
+    }
 
-  public static void main(String[] args) {
-    PApplet.main("TwentyFortyEight.App");
-  }
+    /**
+     * Draw all elements in the game by current frame.
+     */
+    @Override
+    public void draw() {
+        // Game background
+        this.background(250, 248, 239);
+        this.textSize(40);
+        this.strokeWeight(15);
+
+        // Draw score at top
+        this.score.draw(this);
+
+        // Draw main board
+        this.board.draw(this);
+
+    }
+
+    public static void main(String[] args) {
+        PApplet.main("TwentyFortyEight.App");
+    }
 }
