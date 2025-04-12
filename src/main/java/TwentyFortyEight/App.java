@@ -26,11 +26,13 @@ public class App extends PApplet {
     public static final int HEIGHT = GRID_SIZE * CELLSIZE;
     public static final int FPS = 30;
     public static final int TOP_SIZE=200;
+    
 
     private Cell[][] board;
     private Score score;
+    private Timer timer;
     public static Random random = new Random();
-
+    
     private PFont font;
     public PImage eight;
 
@@ -40,7 +42,7 @@ public class App extends PApplet {
     public App() {
         this.board = new Cell[4][4];
         this.score=new Score(0);
-
+        this.timer=new Timer(0);
     }
 
     /**
@@ -77,7 +79,7 @@ public class App extends PApplet {
      */
     @Override
     public void keyPressed(KeyEvent event) {
-
+    
     }
 
     /**
@@ -118,6 +120,7 @@ public class App extends PApplet {
         }
 
         this.score.draw(this);
+        this.timer.draw(this);
 
     }
 
