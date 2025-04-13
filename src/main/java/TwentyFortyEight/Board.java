@@ -35,7 +35,7 @@ public class Board {
 
         for (int i = 0; i < this.size; i++) {
             for (int j = 0; j < this.size; j++) {
-                if (this.cells[i][j] == null) {
+                if (this.cells[i][j].getValue() == 0) {
                     availableCells.add(new int[]{i, j});
                 }
             }
@@ -78,24 +78,50 @@ public class Board {
 
     // addCellAt
     public void addCellAt(int x, int y) {
-        // this.cells[x][y] must be null
-        if(this.cells[x][y] == null){
-            int value = (App.random.nextInt(2)+1)*2;
-            Cell cell = new Cell(x,y,value);
-            insertCell(cell);
-        }
+        if (!inBounds(x, y)) return;
+
+        // this.cells[x][y] must have 0 in value
+        if (this.cells[x][y].getValue() != 0) return;
+
+        int value = (App.random.nextInt(2)+1)*2;
+        System.out.println("New cell at: " + x + " " + y + " with value " + value);
+        Cell cell = new Cell(x, y, value);
+        insertCell(cell);
     }
 
     // insertCell
     public void insertCell(Cell cell) {
-        if (this.cells[cell.getX()][cell.getY()] == null) {
-            this.cells[cell.getX()][cell.getY()] = cell;
-        }
+        this.cells[cell.getX()][cell.getY()] = cell;
     }
 
     // removeCell
     public void removeCell(Cell cell) {
-        this.cells[cell.getX()][cell.getY()] = null;
+        this.cells[cell.getX()][cell.getY()].setValue(0);
+    }
+
+    public boolean inBounds(int x, int y) {
+        return x >= 0 && x < this.size && y >= 0 && y < this.size;
+    }
+
+    // prepareTiles
+    public void prepareCells() {
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.size; j++) {
+                Cell cell = this.cells[i][j];
+                if (cell.getValue() != 0) {
+                    cell.setmergedFrom(null);
+                    cell.savePosition();
+                    cell.setisNew(false);
+                }
+            }
+        }
+    }
+
+    // moveCell
+    public void moveCell(Cell cell, int toX, int toY) {
+        this.cells[cell.getX()][cell.getY()].setValue(0);
+        this.cells[toX][toY] = cell;
+        cell.updatePosition(toX, toY);
     }
 
     // draw

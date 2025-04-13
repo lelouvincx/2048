@@ -13,6 +13,9 @@ public class Score {
         this.score = score;
         this.bestScore = score;
     }
+    public void reset(){
+        this.score = 0;
+    }
 
     public int getScore() {
         return score;
@@ -35,12 +38,13 @@ public class Score {
         app.fill(189, 172, 151);
         app.rect(150,10,100,50);
         app.fill(0,0,0);
-        app.text(String.valueOf(this.score), (150+40), (10+45));
+        app.text(String.valueOf(this.score), (150), (10+45));
 
         // best score
         app.fill(189, 172, 151);
         app.rect(150,70,100,50);
         app.fill(0,0,0);
-        app.text(String.valueOf(this.bestScore),(150+40), (70+45));
+        app.text(String.valueOf(this.bestScore),(150), (70+45));
+        
     }
 }
