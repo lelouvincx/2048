@@ -91,6 +91,23 @@ public class Board {
         }
     }
 
+    public void prepareTiles() {
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.size; j++) {
+                Tile tile = this.tiles[i][j];
+                if (tile != null) {
+                    tile.setMergedFrom(null);
+                    tile.savePosition();
+                    tile.setIsNew(false);
+                }
+            }
+        }
+    }
+
+    public Tile getTile(int x, int y) {
+        return this.tiles[x][y];
+    }
+
     public void moveTile(Tile tile, int toX, int toY) {
         // Create an animation object here
 
@@ -98,6 +115,41 @@ public class Board {
         tiles[tile.getX()][tile.getY()] = null;
         tiles[toX][toY] = tile;
         tile.updatePosition(toX, toY);
+    }
+
+    public boolean tileMatchingAvailable(App app) {
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.size; j++) {
+                Tile tile = this.getTile(i, j);
+                if (tile == null) continue;
+
+                for (int direction = 0; direction < 4; direction++) {
+                    Vector vector = app.getVector(direction);
+                    int newX = i + vector.getX();
+                    int newY = j + vector.getY();
+                    Tile other = this.getTile(newX, newY);
+
+                    if (other != null && other.getValue() == tile.getValue()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean movesAvailable(App app) {
+        // Check if there are any moves available
+        // If any tiles available, return true
+        // If any matching tiles available, return true
+        // Else return false
+        if (this.tilesAvailable()) {
+            return true;
+        }
+        else if (this.tileMatchingAvailable(app)) {
+            return true;
+        }
+        return false;
     }
 
     public void draw(App app) {

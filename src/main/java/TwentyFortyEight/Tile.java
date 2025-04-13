@@ -72,6 +72,10 @@ public class Tile {
         return mergedFrom;
     }
 
+    public void setMergedFrom(Tile[] mergedFrom) {
+        this.mergedFrom = mergedFrom;
+    }
+
     public boolean isNew() {
         return isNew;
     }

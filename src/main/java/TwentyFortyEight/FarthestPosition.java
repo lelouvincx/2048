@@ -3,14 +3,14 @@ package TwentyFortyEight;
 public class FarthestPosition {
     private int farthestX;
     private int farthestY;
-    private int x;
-    private int y;
+    private int nextX;
+    private int nextY;
 
-    public FarthestPosition(int x, int y) {
-        this.farthestX = x;
-        this.farthestY = y;
-        this.x = x;
-        this.y = y;
+    public FarthestPosition(int farthestX, int farthestY, int nextX, int nextY) {
+        this.farthestX = farthestX;
+        this.farthestY = farthestY;
+        this.nextX = nextX;
+        this.nextY = nextY;
     }
 
     public int getFarthestX() {
@@ -21,11 +21,11 @@ public class FarthestPosition {
         return farthestY;
     }
 
-    public int getX() {
-        return x;
+    public int getNextX() {
+        return nextX;
     }
 
-    public int getY() {
-        return y;
+    public int getNextY() {
+        return nextY;
     }
 }
