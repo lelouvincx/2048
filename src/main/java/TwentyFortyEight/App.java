@@ -107,10 +107,10 @@ public class App extends PApplet {
 
     public Vector getVector(int direction) {
         Vector[] map = {
-            new Vector(-1, 0), // 0: UP
-            new Vector(0, 1), // 1: RIGHT
-            new Vector(1, 0), // 2: DOWN
-            new Vector(0, -1) // 3: LEFT
+            new Vector(0, -1), // 0: UP
+            new Vector(1, 0), // 1: RIGHT
+            new Vector(0, 1), // 2: DOWN
+            new Vector(-1, 0) // 3: LEFT
         };
         return map[direction];
     }
@@ -125,7 +125,7 @@ public class App extends PApplet {
         // x: 0 1 2 3
         // y: 0 1 2 3
 
-        // if right or down, reverse the list
+        // if left or up, reverse the list
         if (vector.getX() == -1) traversal.reverseX();
         if (vector.getY() == -1) traversal.reverseY();
 
@@ -145,7 +145,7 @@ public class App extends PApplet {
             nextY += vector.getY();
         } while (this.board.inBounds(nextY, nextX) && this.board.cells[nextY][nextX].getValue() == 0);
 
-        return new FarthestPosition(prevX, prevY, x + vector.getX(), y + vector.getY());
+        return new FarthestPosition(prevX, prevY, nextX - vector.getX(), nextY - vector.getY());
     }
 
     private boolean move(int direction) { // 0, 1, 2, 3
@@ -162,38 +162,50 @@ public class App extends PApplet {
 
         this.board.prepareCells();
 
+        for (int i = 0; i < this.board.getSize(); i++) {
+            for (int j = 0; j < this.board.getSize(); j++) {
+                System.out.print(this.board.cells[j][i].getValue() + " ");
+            }
+            System.out.println();
+        }
+
         for (int i: traversal.getX()) {
             for (int j: traversal.getY()) {
                 int x = i;
                 int y = j;
+                // System.out.println("x: " + x + ", y: " + y + ", value: ");
 
-                Cell cell = this.board.cells[x][y];
+                Cell cell = this.board.cells[y][x];
                 if (cell.getValue() == 0) continue;
-                System.out.println("x: " + x + ", y: " + y + ", value: " + cell.getValue());
+                System.out.println("x: " + cell.getX() + ", y: " + cell.getY() + ", value: " + cell.getValue());
 
                 // 2 _ 2 _
-                FarthestPosition farthestPosition = findFarthestPosition(x, y, vector);
+                FarthestPosition farthestPosition = findFarthestPosition(cell.getX(), cell.getY(), vector);
                 System.out.println("farthestPosition - x: " + farthestPosition.getFarthestX() + ", y: " + farthestPosition.getFarthestY());
                 System.out.println("next - x: " + farthestPosition.getNextX() + ", y: " + farthestPosition.getNextY());
                 Cell next = this.board.cells[farthestPosition.getNextX()][farthestPosition.getNextY()];
 
-                // if (next != null && next.getValue() != 0 && next.getValue() == cell.getValue() && next.getmergedFrom() == null) {
-                //     // Merge them
-                //     Cell mergedCell = new Cell(farthestPosition.getFarthestY(), farthestPosition.getFarthestX(), cell.getValue() * 2);
-                //     System.out.println("mergedCell - x: " + mergedCell.getX() + ", y: " + mergedCell.getY());
-                //     mergedCell.setmergedFrom(new Cell[] {cell, next});
-                //     mergedCell.setisMerged(true);
+                if (cell.getX() == farthestPosition.getFarthestX() && cell.getY() == farthestPosition.getFarthestY())
+                    continue;
 
-                //     this.board.insertCell(mergedCell);
-                //     this.board.removeCell(cell);
+                if (next != null && next.getValue() != 0 && next.getValue() == cell.getValue() && next.getmergedFrom() == null) {
+                    // Merge them
+                    Cell mergedCell = new Cell(farthestPosition.getFarthestX(), farthestPosition.getFarthestY(), cell.getValue() * 2);
+                    mergedCell.setmergedFrom(new Cell[] {cell, next});
+                    mergedCell.setisMerged(true);
+                    System.out.println("mergedCell - x: " + mergedCell.getX() + ", y: " + mergedCell.getY() + ", value: " + mergedCell.getValue());
 
-                //     cell.updatePosition(farthestPosition.getNextY(), farthestPosition.getNextX());
+                    this.board.insertCell(mergedCell);
+                    this.board.removeCell(cell);
 
-                //     // increase the score
-                //     this.score.addScore(mergedCell.getValue());
-                // } else {
-                    // this.board.moveCell(cell, farthestPosition.getFarthestY(), farthestPosition.getFarthestX());
-                // }
+                    cell.updatePosition(farthestPosition.getNextX(), farthestPosition.getNextY());
+
+                    // increase the score
+                    this.score.addScore(mergedCell.getValue());
+                } else {
+                    System.out.println("Moving cell to - x: " + farthestPosition.getFarthestX() + ", y: " + farthestPosition.getFarthestY());
+                    this.board.moveCell(cell, farthestPosition.getFarthestX(), farthestPosition.getFarthestY(), vector);
+                }
 
                 // check if tile moved
                 // if (cell.getX() != x || cell.getY() != y) {
@@ -233,9 +245,7 @@ public class App extends PApplet {
      * Receive key released signal from the keyboard.
      */
     @Override
-    public void keyReleased() {
-
-    }
+    public void keyReleased() { }
 
     @Override
     public void mouseReleased(MouseEvent e) {
@@ -251,9 +261,7 @@ public class App extends PApplet {
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {
-
-    }
+    public void mousePressed(MouseEvent e) { }
 
     /**
      * Draw all elements in the game by current frame.

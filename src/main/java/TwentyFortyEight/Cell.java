@@ -5,8 +5,10 @@ public class Cell {
     private int x;
     private int y;
     private int value;
-    private int prevX;
-    private int prevY;
+    private int prevXPixel;
+    private int prevYPixel;
+    private Vector lastDirection;
+    private boolean isMoving;
     private Cell[] mergedFrom; // Cell = 8 = 4 + 4 = 2 + 2 + 2 + 2
     private boolean isNew;
     private boolean isMerged;
@@ -30,8 +32,9 @@ public class Cell {
         this.x = x;
         this.y = y;
         this.value = 0;
-        this.prevX = -1;
-        this.prevY = -1;
+        this.prevXPixel = x * App.CELLSIZE;
+        this.prevYPixel = y * App.CELLSIZE + App.TOP_SIZE;
+        this.lastDirection = null;
         this.mergedFrom = null;
         this.isNew = false;
         this.isMerged = false;
@@ -41,8 +44,9 @@ public class Cell {
         this.x = x;
         this.y = y;
         this.value = value;
-        this.prevX = -1;
-        this.prevY = -1;
+        this.prevXPixel = x * App.CELLSIZE;
+        this.prevYPixel = y * App.CELLSIZE + App.TOP_SIZE;
+        this.lastDirection = null;
         this.mergedFrom = null;
         this.isNew = false;
         this.isMerged = false; 
@@ -52,21 +56,23 @@ public class Cell {
     public int getX() { return x; }
     public int getY() { return y; }
     public int getValue() { return value; }
-    public int getprevX() { return prevX; }
-    public int getprevY() { return prevY; }
+    public int getprevXPixel() { return prevXPixel; }
+    public int getprevYPixel() { return prevYPixel; }
     public Cell[] getmergedFrom() { return mergedFrom; }
     public boolean isNew() { return isNew; }
     public boolean isMerged() { return isMerged; }
+    public Vector getLastDirection() { return this.lastDirection; }
 
     // and setters
     public void setX(int x) { this.x = x; }
     public void setY(int y) { this.y = y; }
     public void setValue(int value) { this.value = value; }
-    public void setprevX(int prevX) { this.prevX = prevX; }
-    public void setprevY(int prevY) { this.prevY=prevY; }
-    public void setmergedFrom(Cell[] mergedFrom){ this.mergedFrom = mergedFrom; }
-    public void setisNew(boolean isNew){ this.isNew = isNew; }
-    public void setisMerged(boolean isMerged){ this.isMerged = isMerged; }
+    public void setprevXPixel(int prevX) { this.prevXPixel = prevX; }
+    public void setprevYPixel(int prevY) { this.prevYPixel = prevY; }
+    public void setmergedFrom(Cell[] mergedFrom) { this.mergedFrom = mergedFrom; }
+    public void setisNew(boolean isNew) { this.isNew = isNew; }
+    public void setisMerged(boolean isMerged) { this.isMerged = isMerged; }
+    public void setLastDirection(Vector direction) { this.lastDirection = direction; }
 
     public void place() {
         if (this.value == 0) {
@@ -75,35 +81,49 @@ public class Cell {
     }
 
     public void savePosition() {
-        this.prevX = this.x;
-        this.prevY = this.y;
+        this.prevXPixel = this.x * App.CELLSIZE; // x = 2 ==> pixel = 200
+        this.prevYPixel = this.y * App.CELLSIZE + App.TOP_SIZE; // y = 2 ==> pixel = 200 + 200 = 400
     }
 
     public void updatePosition(int x, int y) {
+        savePosition();
         this.x = x;
         this.y = y;
+    }
+
+    public boolean isMoving() {
+        if (this.prevXPixel != this.x * App.CELLSIZE) return true;
+        if (this.prevXPixel != this.y * App.CELLSIZE + App.TOP_SIZE) return true;
+
+        this.lastDirection = null;
+        return false;
     }
 
     /**
      * This draws the cell
      */
     public void draw(App app) {
-        app.stroke(156, 139, 124);
+        app.stroke(0, 0, 0);
 
-        if (app.mouseX > x*App.CELLSIZE && app.mouseX < (x+1)*App.CELLSIZE 
-            && app.mouseY > y*App.CELLSIZE+App.TOP_SIZE && app.mouseY < (y+1)*App.CELLSIZE+App.TOP_SIZE) {
-            Integer[] col = COLORS.getOrDefault(this.value, new Integer[]{189, 172, 151});
-            app.fill(col[0], col[1], col[2]);
-        } else {
-            Integer[] col = COLORS.getOrDefault(this.value, new Integer[]{189, 172, 151});
-            app.fill(col[0], col[1], col[2]);
-        }
+        // if (app.mouseX > x*App.CELLSIZE && app.mouseX < (x+1)*App.CELLSIZE 
+        //     && app.mouseY > y*App.CELLSIZE+App.TOP_SIZE && app.mouseY < (y+1)*App.CELLSIZE+App.TOP_SIZE) {
+        //     Integer[] col = COLORS.getOrDefault(this.value, new Integer[]{189, 172, 151});
+        //     app.fill(col[0], col[1], col[2]);
+        // } else {
+        Integer[] col = COLORS.getOrDefault(this.value, new Integer[]{189, 172, 151});
+        app.fill(col[0], col[1], col[2]);
+        // }
 
         // Write text
-        app.rect(x*App.CELLSIZE, y*App.CELLSIZE+ App.TOP_SIZE, App.CELLSIZE, App.CELLSIZE);
+        app.rect(x*App.CELLSIZE, y*App.CELLSIZE+App.TOP_SIZE, App.CELLSIZE, App.CELLSIZE);
         if (this.value > 0) {
             app.fill(0, 0, 0);
-            app.text(String.valueOf(this.value), (x+0.4f)*App.CELLSIZE, (y+0.6f)*App.CELLSIZE+App.TOP_SIZE);
+            app.text(String.valueOf(this.value), x*App.CELLSIZE+40, y*App.CELLSIZE+App.TOP_SIZE+60);
         }
+
+        // if (isMoving() && this.lastDirection != null) {
+        //     prevXPixel += this.lastDirection.getX();
+        //     prevYPixel += this.lastDirection.getY();
+        // }
     }
 }

@@ -118,10 +118,12 @@ public class Board {
     }
 
     // moveCell
-    public void moveCell(Cell cell, int toX, int toY) {
-        this.cells[cell.getX()][cell.getY()].setValue(0);
+    public void moveCell(Cell cell, int toX, int toY, Vector direction) {
+        this.cells[cell.getX()][cell.getY()] = new Cell(cell.getX(), cell.getY(), 0);
+
         this.cells[toX][toY] = cell;
         cell.updatePosition(toX, toY);
+        cell.setLastDirection(direction);
     }
 
     // draw
