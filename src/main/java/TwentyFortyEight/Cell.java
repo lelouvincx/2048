@@ -5,13 +5,15 @@ public class Cell {
     private int x;
     private int y;
     private int value;
-    private int prevXPixel;
-    private int prevYPixel;
-    private Vector lastDirection;
-    private boolean isMoving;
     private Cell[] mergedFrom; // Cell = 8 = 4 + 4 = 2 + 2 + 2 + 2
     private boolean isNew;
     private boolean isMerged;
+    private boolean movedThisTurn;
+    private float animX;
+    private float animY;
+    private boolean isAnimating;
+    private float animProgress;
+    private static final float ANIMATION_SPEED = 0.2f;
     private static final HashMap<Integer, Integer[]> COLORS = new HashMap<Integer, Integer[]>(); 
 
     static{
@@ -32,47 +34,55 @@ public class Cell {
         this.x = x;
         this.y = y;
         this.value = 0;
-        this.prevXPixel = x * App.CELLSIZE;
-        this.prevYPixel = y * App.CELLSIZE + App.TOP_SIZE;
-        this.lastDirection = null;
         this.mergedFrom = null;
         this.isNew = false;
         this.isMerged = false;
+        this.movedThisTurn = false;
+        this.animX = x;
+        this.animY = y;
+        this.isAnimating = false;
+        this.animProgress = 0;
     }
 
     public Cell(int x, int y, int value) {
         this.x = x;
         this.y = y;
         this.value = value;
-        this.prevXPixel = x * App.CELLSIZE;
-        this.prevYPixel = y * App.CELLSIZE + App.TOP_SIZE;
-        this.lastDirection = null;
         this.mergedFrom = null;
         this.isNew = false;
         this.isMerged = false; 
+        this.movedThisTurn = false;
+        this.animX = x;
+        this.animY = y;
+        this.isAnimating = false;
+        this.animProgress = 0;
     }
 
     // getters: x, y, value, prevX, prevY, mergedFrom, isNew, isMerged
     public int getX() { return x; }
     public int getY() { return y; }
     public int getValue() { return value; }
-    public int getprevXPixel() { return prevXPixel; }
-    public int getprevYPixel() { return prevYPixel; }
     public Cell[] getmergedFrom() { return mergedFrom; }
     public boolean isNew() { return isNew; }
     public boolean isMerged() { return isMerged; }
-    public Vector getLastDirection() { return this.lastDirection; }
+    public boolean movedThisTurn() { return movedThisTurn; }
+    public float getAnimX() { return animX; }
+    public float getAnimY() { return animY; }
+    public boolean isAnimating() { return isAnimating; }
+    public float getAnimProgress() { return animProgress; }
 
     // and setters
     public void setX(int x) { this.x = x; }
     public void setY(int y) { this.y = y; }
     public void setValue(int value) { this.value = value; }
-    public void setprevXPixel(int prevX) { this.prevXPixel = prevX; }
-    public void setprevYPixel(int prevY) { this.prevYPixel = prevY; }
     public void setmergedFrom(Cell[] mergedFrom) { this.mergedFrom = mergedFrom; }
     public void setisNew(boolean isNew) { this.isNew = isNew; }
     public void setisMerged(boolean isMerged) { this.isMerged = isMerged; }
-    public void setLastDirection(Vector direction) { this.lastDirection = direction; }
+    public void setmovedThisTurn(boolean movedThisTurn) { this.movedThisTurn = movedThisTurn; }
+    public void setAnimX(float animX) { this.animX = animX; }
+    public void setAnimY(float animY) { this.animY = animY; }
+    public void setAnimating(boolean isAnimating) { this.isAnimating = isAnimating; }
+    public void setAnimProgress(float animProgress) { this.animProgress = animProgress; }
 
     public void place() {
         if (this.value == 0) {
@@ -81,8 +91,27 @@ public class Cell {
     }
 
     public void savePosition() {
-        this.prevXPixel = this.x * App.CELLSIZE; // x = 2 ==> pixel = 200
-        this.prevYPixel = this.y * App.CELLSIZE + App.TOP_SIZE; // y = 2 ==> pixel = 200 + 200 = 400
+    }
+
+    public void startAnimation(int targetX, int targetY) {
+        this.animX = this.x;
+        this.animY = this.y;
+        this.x = targetX;
+        this.y = targetY;
+        this.isAnimating = true;
+        this.animProgress = 0;
+    }
+
+    public boolean updateAnimation() {
+        if (!isAnimating) return false;
+
+        animProgress += ANIMATION_SPEED;
+        if (animProgress >= 1) {
+            animProgress = 1;
+            isAnimating = false;
+            return true;
+        }
+        return false;
     }
 
     public void updatePosition(int x, int y) {
@@ -91,12 +120,8 @@ public class Cell {
         this.y = y;
     }
 
-    public boolean isMoving() {
-        if (this.prevXPixel != this.x * App.CELLSIZE) return true;
-        if (this.prevXPixel != this.y * App.CELLSIZE + App.TOP_SIZE) return true;
-
-        this.lastDirection = null;
-        return false;
+    private float easeInOutQuad(float t) {
+        return t < 0.5f ? 2 * t * t : 1 - (float)Math.pow(-2 * t + 2, 2) / 2;
     }
 
     /**
@@ -105,17 +130,30 @@ public class Cell {
     public void draw(App app) {
         app.stroke(0, 0, 0);
 
-        // if (app.mouseX > x*App.CELLSIZE && app.mouseX < (x+1)*App.CELLSIZE 
-        //     && app.mouseY > y*App.CELLSIZE+App.TOP_SIZE && app.mouseY < (y+1)*App.CELLSIZE+App.TOP_SIZE) {
-        //     Integer[] col = COLORS.getOrDefault(this.value, new Integer[]{189, 172, 151});
-        //     app.fill(col[0], col[1], col[2]);
-        // } else {
+        // Calculate the pixel position of the cell
+        float drawX, drawY;
+        if (isAnimating) {
+            float eased = easeInOutQuad(animProgress);
+            drawX = animX + (x - animX) * eased;
+            drawY = animY + (y - animY) * eased;
+        } else {
+            drawX = x;
+            drawY = y;
+        }
+
+        // Check for mouse hover using actual coordinates
         Integer[] col = COLORS.getOrDefault(this.value, new Integer[]{189, 172, 151});
-        app.fill(col[0], col[1], col[2]);
-        // }
+        if (app.mouseX > drawX * App.CELLSIZE && app.mouseX < (drawX + 1) * App.CELLSIZE
+                && app.mouseY > drawY * App.CELLSIZE + App.TOP_SIZE && app.mouseY < (drawY + 1) * App.CELLSIZE + App.TOP_SIZE) {
+            app.fill(col[0], col[1], col[2]);
+        } else {
+            app.fill(col[0], col[1], col[2]);
+        }
+
+        // Draw rectangle
+        app.rect(drawX * App.CELLSIZE, drawY * App.CELLSIZE + App.TOP_SIZE, App.CELLSIZE, App.CELLSIZE);
 
         // Write text
-        app.rect(x*App.CELLSIZE, y*App.CELLSIZE+App.TOP_SIZE, App.CELLSIZE, App.CELLSIZE);
         if (this.value > 0) {
             app.fill(0, 0, 0);
             app.text(String.valueOf(this.value), x*App.CELLSIZE+40, y*App.CELLSIZE+App.TOP_SIZE+60);

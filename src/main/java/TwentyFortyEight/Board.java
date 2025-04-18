@@ -112,6 +112,7 @@ public class Board {
                     cell.setmergedFrom(null);
                     cell.savePosition();
                     cell.setisNew(false);
+                    cell.setmovedThisTurn(false);
                 }
             }
         }
@@ -123,7 +124,8 @@ public class Board {
 
         this.cells[toX][toY] = cell;
         cell.updatePosition(toX, toY);
-        cell.setLastDirection(direction);
+        cell.startAnimation(toX, toY);
+        cell.setmovedThisTurn(true);
     }
 
     // draw

@@ -39,12 +39,13 @@ public class Score {
         app.rect(150,10,100,50);
         app.fill(0,0,0);
         app.text(String.valueOf(this.score), (150), (10+45));
+        app.text("SCORE", (5), (10+45));
 
         // best score
         app.fill(189, 172, 151);
         app.rect(150,70,100,50);
         app.fill(0,0,0);
         app.text(String.valueOf(this.bestScore),(150), (70+45));
-        
+        app.text("BEST", (5), (70+45));
     }
 }

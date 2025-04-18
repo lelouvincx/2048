@@ -26,12 +26,13 @@ public class App extends PApplet {
     public static final int HEIGHT = GRID_SIZE * CELLSIZE;
     public static final int FPS = 30;
     public static final int TOP_SIZE = 200;
-    
 
     private Board board;
     private Score score;
     private Timer timer;
+    private int numStartCells;
     private boolean gameOver;
+    private boolean isAnimating = false;
     public static Random random = new Random();
 
     private PFont font;
@@ -44,6 +45,7 @@ public class App extends PApplet {
         this.board = new Board();
         this.score = new Score(0);
         this.timer = new Timer(0);
+        this.numStartCells = 2;
     }
 
     /**
@@ -51,7 +53,7 @@ public class App extends PApplet {
      */
     @Override
     public void settings() {
-        size(WIDTH, HEIGHT+TOP_SIZE);
+        size(WIDTH, HEIGHT + TOP_SIZE);
     }
 
     /**
@@ -63,7 +65,8 @@ public class App extends PApplet {
         frameRate(FPS);
         // See PApplet javadoc:
         // loadJSONObject(configPath)
-        this.eight = loadImage(this.getClass().getResource("8.png").getPath().toLowerCase(Locale.ROOT).replace("%20", ""));
+        this.eight = loadImage(
+                this.getClass().getResource("8.png").getPath().toLowerCase(Locale.ROOT).replace("%20", ""));
         // " "));
 
         // create attributes for data storage, eg board
@@ -73,7 +76,7 @@ public class App extends PApplet {
             }
         }
 
-        for (int i = 0; i < 1; i++) { // twice
+        for (int i = 0; i < numStartCells; i++) {
             this.board.addRandomCell();
         }
 
@@ -107,10 +110,10 @@ public class App extends PApplet {
 
     public Vector getVector(int direction) {
         Vector[] map = {
-            new Vector(0, -1), // 0: UP
-            new Vector(1, 0), // 1: RIGHT
-            new Vector(0, 1), // 2: DOWN
-            new Vector(-1, 0) // 3: LEFT
+                new Vector(0, -1), // 0: UP
+                new Vector(1, 0), // 1: RIGHT
+                new Vector(0, 1), // 2: DOWN
+                new Vector(-1, 0) // 3: LEFT
         };
         return map[direction];
     }
@@ -126,8 +129,10 @@ public class App extends PApplet {
         // y: 0 1 2 3
 
         // if left or up, reverse the list
-        if (vector.getX() == -1) traversal.reverseX();
-        if (vector.getY() == -1) traversal.reverseY();
+        if (vector.getX() == -1)
+            traversal.reverseX();
+        if (vector.getY() == -1)
+            traversal.reverseY();
 
         return traversal;
     }
@@ -139,13 +144,28 @@ public class App extends PApplet {
         int nextY = y;
 
         do {
-            prevX = nextX;
-            prevY = nextY;
             nextX += vector.getX();
             nextY += vector.getY();
-        } while (this.board.inBounds(nextY, nextX) && this.board.cells[nextY][nextX].getValue() == 0);
 
-        return new FarthestPosition(prevX, prevY, nextX - vector.getX(), nextY - vector.getY());
+            if (!this.board.inBounds(nextY, nextX) || this.board.cells[nextY][nextX].getValue() != 0) {
+                break;
+            }
+
+            prevX = nextX;
+            prevY = nextY;
+        } while (true);
+
+        nextX = prevX + vector.getX();
+        nextY = prevY + vector.getY();
+
+        if (!this.board.inBounds(nextY, nextX) || this.board.cells[nextY][nextX].getValue() != 0) {
+            nextX = prevX;
+            nextY = prevY;
+        }
+
+        System.out.println("DEBUG - prevX: " + prevX + ", prevY: " + prevY);
+        System.out.println("DEBUG - nextX: " + nextX + ", nextY: " + nextY);
+        return new FarthestPosition(prevX, prevY, nextX, nextY);
     }
 
     private boolean move(int direction) { // 0, 1, 2, 3
@@ -153,11 +173,22 @@ public class App extends PApplet {
         // 1: RIGHT
         // 2: DOWN
         // 3: LEFT
-        // if (gameOver) return false;
+        if (gameOver)
+            return false;
 
         System.out.println("Direction: " + direction);
         Vector vector = getVector(direction);
         Traversal traversal = buildTraversal(vector);
+        System.out.println("\nTraversal x:");
+        for (int i : traversal.getX()) {
+            System.out.print(i + " ");
+        }
+        System.out.println();
+        System.out.println("Traversal y:");
+        for (int i : traversal.getY()) {
+            System.out.print(i + " ");
+        }
+        System.out.println("\n");
         boolean moved = false;
 
         this.board.prepareCells();
@@ -169,57 +200,74 @@ public class App extends PApplet {
             System.out.println();
         }
 
-        for (int i: traversal.getX()) {
-            for (int j: traversal.getY()) {
+        System.out.println();
+        for (int i : traversal.getX()) {
+            for (int j : traversal.getY()) {
                 int x = i;
                 int y = j;
-                // System.out.println("x: " + x + ", y: " + y + ", value: ");
 
                 Cell cell = this.board.cells[y][x];
-                if (cell.getValue() == 0) continue;
+                if (cell.getValue() == 0 || cell.movedThisTurn())
+                    continue;
                 System.out.println("x: " + cell.getX() + ", y: " + cell.getY() + ", value: " + cell.getValue());
 
                 // 2 _ 2 _
                 FarthestPosition farthestPosition = findFarthestPosition(cell.getX(), cell.getY(), vector);
-                System.out.println("farthestPosition - x: " + farthestPosition.getFarthestX() + ", y: " + farthestPosition.getFarthestY());
+                System.out.println("farthestPosition - x: " + farthestPosition.getFarthestX() + ", y: "
+                        + farthestPosition.getFarthestY());
                 System.out.println("next - x: " + farthestPosition.getNextX() + ", y: " + farthestPosition.getNextY());
-                Cell next = this.board.cells[farthestPosition.getNextX()][farthestPosition.getNextY()];
-
-                if (cell.getX() == farthestPosition.getFarthestX() && cell.getY() == farthestPosition.getFarthestY())
+                if (farthestPosition.getFarthestX() == cell.getX() && farthestPosition.getFarthestY() == cell.getY()) {
+                    System.out.println("Skip cell");
                     continue;
-
-                if (next != null && next.getValue() != 0 && next.getValue() == cell.getValue() && next.getmergedFrom() == null) {
-                    // Merge them
-                    Cell mergedCell = new Cell(farthestPosition.getFarthestX(), farthestPosition.getFarthestY(), cell.getValue() * 2);
-                    mergedCell.setmergedFrom(new Cell[] {cell, next});
-                    mergedCell.setisMerged(true);
-                    System.out.println("mergedCell - x: " + mergedCell.getX() + ", y: " + mergedCell.getY() + ", value: " + mergedCell.getValue());
-
-                    this.board.insertCell(mergedCell);
-                    this.board.removeCell(cell);
-
-                    cell.updatePosition(farthestPosition.getNextX(), farthestPosition.getNextY());
-
-                    // increase the score
-                    this.score.addScore(mergedCell.getValue());
-                } else {
-                    System.out.println("Moving cell to - x: " + farthestPosition.getFarthestX() + ", y: " + farthestPosition.getFarthestY());
-                    this.board.moveCell(cell, farthestPosition.getFarthestX(), farthestPosition.getFarthestY(), vector);
                 }
+                if (this.board.inBounds(farthestPosition.getNextY(), farthestPosition.getNextX())) {
+                    Cell next = this.board.cells[farthestPosition.getNextX()][farthestPosition.getNextY()];
+                    if (next.getValue() != 0 && next.getValue() == cell.getValue() && next.getmergedFrom() == null) {
+                        // Merge cells: cell with next
+                        System.out.println("DEBUG - Merging cell at x: " + cell.getX() + ", y: " + cell.getY()
+                                + ", value: " + cell.getValue() + " with next - x: " + next.getX() + ", y: "
+                                + next.getY() + ", value: " + next.getValue());
 
-                // check if tile moved
-                // if (cell.getX() != x || cell.getY() != y) {
-                //     moved = true;
-                // }
+                        Cell mergedCell = new Cell(farthestPosition.getNextX(), farthestPosition.getNextY(),
+                                cell.getValue() * 2);
+                        mergedCell.setmergedFrom(new Cell[] { cell, next });
+                        mergedCell.setisMerged(true);
+                        mergedCell.setmovedThisTurn(true);
+
+                        cell.startAnimation(farthestPosition.getNextX(), farthestPosition.getNextY());
+
+                        System.out.println("mergedCell - x: " + mergedCell.getX() + ", y: " + mergedCell.getY()
+                                + ", value: " + mergedCell.getValue());
+
+                        // Dont need to remove for 'next' because it insertCell will overwrite it
+                        this.board.removeCell(cell);
+                        this.board.insertCell(mergedCell);
+
+                        cell.updatePosition(farthestPosition.getNextX(), farthestPosition.getNextY());
+
+                        // increase the score
+                        this.score.addScore(mergedCell.getValue());
+                        moved = true;
+                        System.out.println();
+                    } else {
+                        System.out.println("Moving cell to - x: " + farthestPosition.getFarthestX() + ", y: "
+                                + farthestPosition.getFarthestY());
+                        this.board.moveCell(cell, farthestPosition.getFarthestX(), farthestPosition.getFarthestY(),
+                                vector);
+                        cell.setmovedThisTurn(true);
+                        moved = true;
+                        System.out.println();
+                    }
+                }
             }
         }
 
-        // if (moved) {
-        //     this.board.addRandomCell();
-        //     if (checkGameOver()) {
-        //         this.gameOver = true;
-        //     }
-        // }
+        if (moved) {
+            this.board.addRandomCell();
+            if (checkGameOver()) {
+                this.gameOver = true;
+            }
+        }
 
         return true;
     }
@@ -229,15 +277,27 @@ public class App extends PApplet {
      */
     @Override
     public void keyPressed(KeyEvent event) {
+        if (isAnimating) return;
+
         int key = event.getKeyCode();
 
         switch (key) {
-            case java.awt.event.KeyEvent.VK_LEFT: move(3); break;
-            case java.awt.event.KeyEvent.VK_RIGHT: move(1); break;
-            case java.awt.event.KeyEvent.VK_UP: move(0); break;
-            case java.awt.event.KeyEvent.VK_DOWN: move(2); break;
-            case 'R': setup();
-            case 'r': setup();
+            case java.awt.event.KeyEvent.VK_LEFT:
+                move(3);
+                break;
+            case java.awt.event.KeyEvent.VK_RIGHT:
+                move(1);
+                break;
+            case java.awt.event.KeyEvent.VK_UP:
+                move(0);
+                break;
+            case java.awt.event.KeyEvent.VK_DOWN:
+                move(2);
+                break;
+            case 'R':
+                setup();
+            case 'r':
+                setup();
         }
     }
 
@@ -249,11 +309,14 @@ public class App extends PApplet {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == PConstants.LEFT) {
-            if (e.getY() < App.TOP_SIZE) return;
+        if (isAnimating) return;
 
-            int x = e.getX()/App.CELLSIZE;
-            int y = (e.getY() - App.TOP_SIZE)/App.CELLSIZE;
+        if (e.getButton() == PConstants.LEFT) {
+            if (e.getY() < App.TOP_SIZE)
+                return;
+
+            int x = e.getX() / App.CELLSIZE;
+            int y = (e.getY() - App.TOP_SIZE) / App.CELLSIZE;
             System.out.println(e.getX());
             System.out.println(e.getY());
             this.board.addCellAt(x, y);
@@ -261,7 +324,8 @@ public class App extends PApplet {
     }
 
     @Override
-    public void mousePressed(MouseEvent e) { }
+    public void mousePressed(MouseEvent e) {
+    }
 
     /**
      * Draw all elements in the game by current frame.
@@ -274,13 +338,19 @@ public class App extends PApplet {
 
         this.timer.draw(this);
         this.score.draw(this);
-        
+
+        boolean stillAnimating = false;
         for (int i = 0; i < this.board.getSize(); i++) {
             for (int i2 = 0; i2 < this.board.getSize(); i2++) {
-                this.board.cells[i][i2].draw(this);
-                // System.out.println(this.board.cells[i][i2].getValue());
+                Cell cell = this.board.cells[i][i2];
+                if (cell.getValue() > 0 && cell.isAnimating()) {
+                    boolean done = cell.updateAnimation();
+                    if (!done) stillAnimating = true;
+                }
+                cell.draw(this);
             }
         }
+        isAnimating = stillAnimating;
 
         if (this.gameOver) {
             fill(255, 0, 0);
